@@ -35,9 +35,9 @@ export type FormFieldsValidationResults<FormValidations extends FormValidationsB
 
 export type ErrorTypes = string | object | symbol | (() => string | object | symbol);
 
-export type RequireableValue = Nullable<object | string | number | null | undefined | Array<any>>;
+export type RequireableValue = Nullable<object | string | number | null | undefined | Array<unknown>>;
 
-export type CountableValue = Nullable<string | object | null | undefined | Array<any>>;
+export type CountableValue = Nullable<string | object | null | undefined | Array<unknown>>;
 
 export type NumericValue = Nullable<string | number>;
 

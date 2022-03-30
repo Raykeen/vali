@@ -3,47 +3,22 @@ import type {
   ErrorTypes,
   Form,
   FormFieldsValidationResults,
-  FormValidationResults,
   FormValidationsBase,
+  IValidator,
   NumericValue,
   RequireableValue,
   ValidationFunctionAdapted,
   ValidationResult,
-  IValidator
 } from './types';
-
-const createValidationResult = <ChildrenValidationResult extends FormValidationResults | null, ErrorType>(
-  isValid = true,
-  error: ErrorType | null = null,
-  result: ChildrenValidationResult,
-): ValidationResult<ErrorType, ChildrenValidationResult> => {
-  if (isValid) {
-    return {
-      isValid: true,
-      error: null,
-      result,
-    };
-  } else {
-    return {
-      isValid: false,
-      error: error!,
-      result,
-    };
-  }
-};
-
-const hasMeaningfulValue = (value: RequireableValue): boolean =>
-  (typeof value === 'number' && Number.isFinite(value)) ||
-  (Array.isArray(value) && value.length > 0) ||
-  (typeof value === 'string' && value.length > 0) ||
-  (typeof value === 'object' && value && Object.keys(value).length > 0) ||
-  false;
+import { createValidationResult } from './validationResult';
+import * as Validations from './validationFunctions';
 
 export class Validator<
   Value = unknown,
   ErrorType extends ErrorTypes = string,
   VResult extends ValidationResult<ErrorType, any> = ValidationResult<ErrorType>,
-> implements IValidator<Value, ErrorType, VResult> {
+> implements IValidator<Value, ErrorType, VResult>
+{
   #validations: ValidationFunctionAdapted<Value, VResult | ValidationResult<ErrorType>>[] = [];
   #context: any = null;
   #cache: {
@@ -61,7 +36,10 @@ export class Validator<
   }
 
   required(error: ErrorType): Validator<Extract<Value, RequireableValue>, ErrorType> {
-    return this.#addValidation((value: Extract<Value, RequireableValue>) => hasMeaningfulValue(value), error);
+    return this.#addValidation(
+      (value: Extract<Value, RequireableValue>) => Validations.validateRequireness(value),
+      error,
+    );
   }
 
   static fn<Value, ErrorType extends ErrorTypes>(fn: (val: Value) => boolean, error: ErrorType) {
@@ -78,10 +56,7 @@ export class Validator<
 
   minLength(min: number, message: ErrorType): Validator<Extract<Value, CountableValue>, ErrorType> {
     return this.#addValidation(
-      (value: Extract<Value, CountableValue>, min: number) =>
-        !hasMeaningfulValue(value) ||
-        ('length' in value && value.length >= min) ||
-        (typeof value === 'object' && value && Object.keys(value).length >= min),
+      (value: Extract<Value, CountableValue>, min: number) => Validations.validateLength(value, { min }),
       message,
       min,
     );
@@ -91,14 +66,11 @@ export class Validator<
     return new Validator<CountableValue, ErrorType>().maxLength(max, error);
   }
 
-  maxLength(min: number, message: ErrorType): Validator<Extract<Value, CountableValue>, ErrorType> {
+  maxLength(max: number, message: ErrorType): Validator<Extract<Value, CountableValue>, ErrorType> {
     this.#addValidation(
-      (value: Extract<Value, CountableValue>, min: number) =>
-        !hasMeaningfulValue(value) ||
-        ('length' in value && value.length >= min) ||
-        (typeof value === 'object' && value && Object.keys(value).length >= min),
+      (value: Extract<Value, CountableValue>, max: number) => Validations.validateLength(value, { max }),
       message,
-      min,
+      max,
     );
     return this;
   }
@@ -109,23 +81,7 @@ export class Validator<
 
   min(min: number, message: ErrorType): Validator<Extract<Value, NumericValue>, ErrorType> {
     this.#addValidation(
-      (value: Extract<Value, NumericValue>, min: number) => {
-        const numberVal = typeof value === 'string' ? Number.parseFloat(value) : value;
-
-        if (typeof numberVal === 'number' && Number.isNaN(numberVal)) {
-          return false;
-        }
-
-        if (!hasMeaningfulValue(numberVal)) {
-          return true;
-        }
-
-        if (typeof numberVal !== 'number') {
-          return false;
-        }
-
-        return numberVal >= min;
-      },
+      (value: Extract<Value, NumericValue>, min: number) => Validations.validateRange(value, { min }),
       message,
       min,
     );
@@ -138,23 +94,7 @@ export class Validator<
 
   max(max: number, message: ErrorType): Validator<Extract<Value, NumericValue>, ErrorType> {
     this.#addValidation(
-      (value: Extract<Value, NumericValue>, max: number) => {
-        const numberVal = typeof value === 'string' ? Number.parseFloat(value) : value;
-
-        if (typeof numberVal === 'number' && Number.isNaN(numberVal)) {
-          return false;
-        }
-
-        if (!hasMeaningfulValue(numberVal)) {
-          return true;
-        }
-
-        if (typeof numberVal !== 'number') {
-          return false;
-        }
-
-        return numberVal <= max;
-      },
+      (value: Extract<Value, NumericValue>, max: number) => Validations.validateRange(value, { max }),
       message,
       max,
     );
