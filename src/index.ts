@@ -1,44 +1,16 @@
-type ValidationResult<ErrorType, ChildrenValidationResults extends FormValidationResults | null = null> =
-  | {
-      isValid: true;
-      error: null;
-      result: ChildrenValidationResults;
-    }
-  | {
-      isValid: false;
-      error: ErrorType;
-      result: ChildrenValidationResults;
-    };
-
-type FormValidationResults = Record<string, ValidationResult<any, any>>;
-
-interface ValidationFunctionAdapted<Value, Result extends ValidationResult<any, any>> {
-  (value: Value): Result;
-}
-
-type FormValidationsBase = Record<string, Validator<any, ErrorTypes, ValidationResult<ErrorTypes, FormValidationResults | null>>>;
-
-type ExtractValue<V> = V extends Validator<infer Value, any> ? Value : unknown;
-
-type Form<FormValidations extends FormValidationsBase> = {
-  [K in keyof FormValidations]: ExtractValue<FormValidations[K]>;
-};
-
-type FormFieldsValidationResults<FormValidations extends FormValidationsBase> = {
-  [K in keyof FormValidations]: FormValidations[K] extends Validator<any, ErrorTypes, infer R> ? R : never;
-}
-
-type Nullable<T> = T | undefined | null;
-
-type ErrorTypes = string | object | symbol | (() => string | object | symbol);
-
-type RequireableValue = Nullable<object | string | number | null | undefined | Array<any>>;
-
-type CountableValue = Nullable<string | object | null | undefined | Array<any>>;
-
-type NumericValue = Nullable<string | number>;
-
-type ArgSelector<T> = (context: any) => T;
+import type {
+  CountableValue,
+  ErrorTypes,
+  Form,
+  FormFieldsValidationResults,
+  FormValidationResults,
+  FormValidationsBase,
+  NumericValue,
+  RequireableValue,
+  ValidationFunctionAdapted,
+  ValidationResult,
+  IValidator
+} from './types';
 
 const createValidationResult = <ChildrenValidationResult extends FormValidationResults | null, ErrorType>(
   isValid = true,
@@ -71,7 +43,7 @@ export class Validator<
   Value = unknown,
   ErrorType extends ErrorTypes = string,
   VResult extends ValidationResult<ErrorType, any> = ValidationResult<ErrorType>,
-> {
+> implements IValidator<Value, ErrorType, VResult> {
   #validations: ValidationFunctionAdapted<Value, VResult | ValidationResult<ErrorType>>[] = [];
   #context: any = null;
   #cache: {
