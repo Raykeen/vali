@@ -23,7 +23,7 @@ export type FormValidationsBase = Record<
   IValidator<any, ErrorTypes, ValidationResult<ErrorTypes, FormValidationResults | null>>
 >;
 
-type ExtractValue<V> = V extends IValidator<infer Value, ErrorTypes, ValidationResult<ErrorTypes, null>> ? Value : unknown;
+type ExtractValue<V> = V extends IValidator<infer Value, ErrorTypes, ValidationResult<ErrorTypes>> ? Value : unknown;
 
 export type Form<FormValidations extends FormValidationsBase> = {
   [K in keyof FormValidations]: ExtractValue<FormValidations[K]>;

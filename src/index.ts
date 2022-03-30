@@ -12,6 +12,7 @@ import type {
 } from './types';
 import { createValidationResult } from './validationResult';
 import * as Validations from './validationFunctions';
+import { ValidatorCacheManager } from './ValidatorCacheManager';
 
 export class Validator<
   Value = unknown,
@@ -20,12 +21,8 @@ export class Validator<
 > implements IValidator<Value, ErrorType, VResult>
 {
   #validations: ValidationFunctionAdapted<Value, VResult | ValidationResult<ErrorType>>[] = [];
-  #context: any = null;
-  #cache: {
-    value: any;
-    context: any;
-    result: VResult;
-  } | null = null;
+  #context: unknown = null;
+  #cache = new ValidatorCacheManager<unknown, unknown, VResult>();
 
   constructor() {
     return this;
@@ -133,7 +130,7 @@ export class Validator<
   }
 
   validate(value: Value, context: any = value): VResult {
-    const cached: VResult | null = this.#getCache(value, context);
+    const cached: VResult | null = this.#cache.get(value, context);
 
     if (cached) return cached;
 
@@ -163,27 +160,11 @@ export class Validator<
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    this.#setCache(value, context, result);
+    this.#cache.set(value, context, result);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return result;
-  }
-
-  #getCache(value: Value, context: any): VResult | null {
-    if (this.#cache && this.#cache.value === value && this.#cache.context === context) {
-      return this.#cache.result;
-    } else {
-      return null;
-    }
-  }
-
-  #setCache(value: Value, context: any, result: VResult) {
-    this.#cache = { value, context, result };
-  }
-
-  #clearCache() {
-    this.#cache = null;
   }
 
   #addValidation<NewValueType extends Value, Args extends Array<unknown>>(
@@ -191,7 +172,7 @@ export class Validator<
     error: ErrorType,
     ...args: Args
   ) {
-    this.#clearCache();
+    this.#cache.clear();
 
     (this as unknown as Validator<NewValueType, ErrorType, VResult>).#validations.push((value: NewValueType) =>
       createValidationResult(validationFn(value, ...args), error, null),
