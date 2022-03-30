@@ -1,0 +1,7 @@
+# npm library files
+lib/
+
+# Dependency directories
+node_modules/
+
+.idea/
