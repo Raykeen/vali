@@ -13,23 +13,20 @@ import type {
 import { createValidationResult } from './validationResult';
 import * as Validations from './validationFunctions';
 import { ValidatorCacheManager } from './ValidatorCacheManager';
+import { EasyString } from './utilityTypes';
 
 export class Validator<
   Value = unknown,
   ErrorType extends ErrorTypes = string,
   VResult extends ValidationResult<ErrorType, any> = ValidationResult<ErrorType>,
-> implements IValidator<Value, ErrorType, VResult>
+  > implements IValidator<Value, ErrorType, VResult>
 {
   #validations: ValidationFunctionAdapted<Value, VResult | ValidationResult<ErrorType>>[] = [];
   #context: unknown = null;
   #cache = new ValidatorCacheManager<unknown, unknown, VResult>();
 
-  constructor() {
-    return this;
-  }
-
   static required<ErrorType extends ErrorTypes>(error: ErrorType) {
-    return new Validator<RequireableValue, ErrorType>().required(error);
+    return new Validator<RequireableValue, EasyString<ErrorType>>().required(error as EasyString<ErrorType>);
   }
 
   required(error: ErrorType): Validator<Extract<Value, RequireableValue>, ErrorType> {
@@ -40,7 +37,7 @@ export class Validator<
   }
 
   static fn<Value, ErrorType extends ErrorTypes>(fn: (val: Value) => boolean, error: ErrorType) {
-    return new Validator<Value, ErrorType>().fn(fn, error);
+    return new Validator<Value, EasyString<ErrorType>>().fn(fn, error as EasyString<ErrorType>);
   }
 
   fn<FnValue>(fn: (val: FnValue) => boolean, error: ErrorType): Validator<Extract<Value, FnValue>, ErrorType> {
@@ -48,7 +45,7 @@ export class Validator<
   }
 
   static minLength<ErrorType extends ErrorTypes>(min: number, error: ErrorType) {
-    return new Validator<CountableValue, ErrorType>().minLength(min, error);
+    return new Validator<CountableValue, EasyString<ErrorType>>().minLength(min, error as EasyString<ErrorType>);
   }
 
   minLength(min: number, message: ErrorType): Validator<Extract<Value, CountableValue>, ErrorType> {
@@ -60,7 +57,7 @@ export class Validator<
   }
 
   static maxLength<ErrorType extends ErrorTypes>(max: number, error: ErrorType) {
-    return new Validator<CountableValue, ErrorType>().maxLength(max, error);
+    return new Validator<CountableValue, EasyString<ErrorType>>().maxLength(max, error as EasyString<ErrorType>);
   }
 
   maxLength(max: number, message: ErrorType): Validator<Extract<Value, CountableValue>, ErrorType> {
@@ -73,7 +70,7 @@ export class Validator<
   }
 
   static min<ErrorType extends ErrorTypes>(min: number, error: ErrorType) {
-    return new Validator<NumericValue, ErrorType>().min(min, error);
+    return new Validator<NumericValue, EasyString<ErrorType>>().min(min, error as EasyString<ErrorType>);
   }
 
   min(min: number, message: ErrorType): Validator<Extract<Value, NumericValue>, ErrorType> {
@@ -86,7 +83,7 @@ export class Validator<
   }
 
   static max<ErrorType extends ErrorTypes>(max: number, error: ErrorType) {
-    return new Validator<NumericValue, ErrorType>().max(max, error);
+    return new Validator<NumericValue, EasyString<ErrorType>>().max(max, error as EasyString<ErrorType>);
   }
 
   max(max: number, message: ErrorType): Validator<Extract<Value, NumericValue>, ErrorType> {
@@ -102,7 +99,7 @@ export class Validator<
     formValidations: FormValidations,
     error: ErrorType,
   ) {
-    return new Validator<Form<FormValidations>, ErrorType>().form(formValidations, error);
+    return new Validator<Form<FormValidations>, EasyString<ErrorType>>().form(formValidations, error as EasyString<ErrorType>);
   }
 
   form<FormValidations extends FormValidationsBase>(formValidations: FormValidations, error: ErrorType) {
@@ -111,18 +108,21 @@ export class Validator<
 
     (this as unknown as Validator<ActualFormType, ErrorType, ActualFormValidationResult>).#validations.push(
       (form: ActualFormType) => {
-        return Object.entries(formValidations).reduce((validationResult, [fieldName, fieldValidator]) => {
+        const fieldsResult = Object.entries(formValidations).reduce((fieldsResult, [fieldName, fieldValidator]) => {
           const fieldValue = form[fieldName];
 
           const fieldResult = fieldValidator.validate(fieldValue, this.#context);
 
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          validationResult.result[fieldName] = fieldResult;
-          validationResult.isValid = validationResult.isValid && fieldResult.isValid;
+          fieldsResult[fieldName] = fieldResult;
 
-          return validationResult;
-        }, createValidationResult<FormFieldsValidationResults<FormValidations>, ErrorType>(true, error, {} as FormFieldsValidationResults<FormValidations>));
+          return fieldsResult;
+        }, {} as FormFieldsValidationResults<FormValidations>);
+
+        const isValid = Object.values(fieldsResult).every(({ isValid }) => isValid);
+
+        return createValidationResult(isValid, error, fieldsResult);
       },
     );
 
