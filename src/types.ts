@@ -41,10 +41,6 @@ export type CountableValue = Nullable<string | object | null | undefined | Array
 
 export type NumericValue = Nullable<string | number>;
 
-export interface IValidator<
-  Value,
-  ErrorType extends ErrorTypes,
-  VResult extends ValidationResult<ErrorType, any>,
-> {
+export interface IValidator<Value, ErrorType extends ErrorTypes, VResult extends ValidationResult<ErrorType, any>> {
   validate: (value: Value, context: any) => VResult;
 }

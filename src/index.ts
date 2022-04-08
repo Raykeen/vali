@@ -40,8 +40,8 @@ export class Validator<
     return new Validator<Value, EasyString<ErrorType>>().fn(fn, error as EasyString<ErrorType>);
   }
 
-  fn<FnValue>(fn: (val: FnValue) => boolean, error: ErrorType): Validator<Extract<Value, FnValue>, ErrorType> {
-    return this.#addValidation((value: Extract<Value, FnValue>) => fn(value), error);
+  fn<FnValue>(fn: (val: FnValue, context: any) => boolean, error: ErrorType): Validator<Extract<Value, FnValue>, ErrorType> {
+    return this.#addValidation((value: Extract<Value, FnValue>) => fn(value, this.#context), error);
   }
 
   static minLength<ErrorType extends ErrorTypes>(min: number, error: ErrorType) {

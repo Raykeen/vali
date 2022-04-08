@@ -6,7 +6,9 @@ describe("some real life usages", () => {
         name: Validator.required("name is required"),
         quantity: Validator.min(1, "minimum 1").max(10, "maximum 10"),
         price: Validator.max(10000, "too much"),
-        recipients: Validator.minLength(1, "should be at least 1 recipient").maxLength(5, "no more than 5 recipients")
+        recipients: Validator.minLength(1, "should be at least 1 recipient").fn((recipients: unknown[], context) => {
+          return Validator.maxLength(context.quantity, "").validate(recipients).isValid
+        }, "recipients count shouldn't be more than quantity")
       }, 'Invalid product form')
 
     const validForm = {
@@ -46,7 +48,7 @@ describe("some real life usages", () => {
         name: "",
         quantity: 11,
         price: 10001,
-        recipients: (new Array(11)).fill("me"),
+        recipients: (new Array(12)).fill("me"),
         description: "blablabla"
       }
 
