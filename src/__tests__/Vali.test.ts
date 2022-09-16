@@ -1,17 +1,25 @@
-import { Validator } from '../index';
+import { Vali } from '../Vali';
 
 describe("some real life usages", () => {
   describe('validates product', () => {
-      const validator = Validator.form({
-        name: Validator.required("name is required"),
-        quantity: Validator.min(1, "minimum 1").max(10, "maximum 10"),
-        price: Validator.max(10000, "too much"),
-        recipients: Validator.minLength(1, "should be at least 1 recipient").fn((recipients: unknown[], context) => {
-          return Validator.maxLength(context.quantity, "").validate(recipients).isValid
+      type FormType = {
+        name: string,
+        quantity: number,
+        price: number | null,
+        recipients: string[],
+        description: string
+      }
+
+      const validator = new Vali<FormType, FormType>().fields({
+        name: (v) => v.required("name is required"),
+        quantity: (v) => v.min(1, "minimum 1").max(10, "maximum 10"),
+        price: (v) => v.max(10000, "too much"),
+        recipients: (v) => v.minLength(1, "should be at least 1 recipient").fn((recipients, context) => {
+          return v.maxLength(context.quantity, "").validate(recipients, context).isValid
         }, "recipients count shouldn't be more than quantity")
       }, 'Invalid product form')
 
-    const validForm = {
+    const validForm: FormType = {
       name: "glasses",
       quantity: 2,
       price: null,
@@ -20,7 +28,7 @@ describe("some real life usages", () => {
     }
 
     it('valid form', () => {
-        const result = validator.validate(validForm);
+        const result = validator.validate(validForm, validForm);
 
         expect(result.isValid).toEqual(true);
         expect(result.error).toBeNull();
@@ -35,7 +43,7 @@ describe("some real life usages", () => {
         name: ""
       }
 
-      const result = validator.validate(form);
+      const result = validator.validate(form, form);
 
       expect(result.isValid).toEqual(false);
       expect(result.error).toEqual('Invalid product form');
@@ -52,7 +60,7 @@ describe("some real life usages", () => {
         description: "blablabla"
       }
 
-      const result = validator.validate(form);
+      const result = validator.validate(form, form);
 
       expect(result.isValid).toEqual(false);
       expect(result.error).toEqual('Invalid product form');
@@ -65,10 +73,10 @@ describe("some real life usages", () => {
 })
 
 it('123', () => {
-  const validator = Validator.form(
+  const validator = new Vali<{ a: any, b: Array<any> }>().fields(
     {
-      a: Validator.required('error A'),
-      b: Validator.maxLength(5, 'error B'),
+      a: (V) => V.required('error A'),
+      b: (V) => V.maxLength(5, 'error B'),
     },
     'error',
   );
@@ -82,16 +90,16 @@ it('123', () => {
 });
 
 it('1234', () => {
-  const avalidator = Validator.form(
+  const avalidator = new Vali<{ c: number, f: number }>().fields(
     {
-      c: Validator.max(5, 'error C'),
+      c: (v) => v.max(5, 'error C'),
     },
     'error a',
   );
-  const validator = Validator.form(
+  const validator = new Vali<{ a: { c: number, f: number }, b: number[] }>().fields(
     {
-      a: avalidator,
-      b: Validator.required('error B').maxLength(5, 'error B'),
+      a: () => avalidator,
+      b: (v) => v.required('error B').maxLength(5, 'error B'),
     },
     'error',
   );
