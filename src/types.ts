@@ -1,7 +1,10 @@
 import type { Nullable } from './utilityTypes';
 import { Vali } from './Vali';
 
-export type ValidationResult<ErrorType, ChildrenValidationResults extends FormFieldsValidationResults<any, any> | null = null> = {
+export type ValidationResult<
+  ErrorType,
+  ChildrenValidationResults extends FormFieldsValidationResults<any, any> | null = null,
+> = {
   isValid: boolean;
   error: null | ErrorType;
   result: ChildrenValidationResults;
@@ -11,9 +14,14 @@ export interface ValidationFunctionAdapted<Value, Context, Result extends Valida
   (value: Value, context: Context): Result;
 }
 
-export type FormValidations<Form, Context, ErrorType extends ErrorTypes = ErrorTypes> = Form extends Record<string, unknown> ? Partial<{
-  [K in keyof Form]: ((V: Vali<Form[K], Context, ErrorType, null>) => IValidator<any, Context, ErrorType>);
-}> : object;
+export type FormValidations<Form, Context, ErrorType extends ErrorTypes = ErrorTypes> = Form extends Record<
+  string,
+  unknown
+>
+  ? Partial<{
+      [K in keyof Form]: (V: Vali<Form[K], Context, ErrorType, null>) => IValidator<any, Context, ErrorType>;
+    }>
+  : object;
 
 export type FormFieldsValidationResults<Validations extends FormValidations<any, any>, Context> = {
   [K in keyof Validations]: Validations[K] extends (V: any) => IValidator<any, Context, infer E, infer R>
@@ -35,5 +43,8 @@ export interface IValidator<
   ErrorType extends ErrorTypes,
   ChildrenVResults extends FormFieldsValidationResults<any, Context> | null = any,
 > {
-  validate: (value: Value, ...rest: (Context extends null ? [undefined?] : [Context])) => ValidationResult<ErrorType, ChildrenVResults>;
+  validate: (
+    value: Value,
+    ...rest: Context extends null ? [undefined?] : [Context]
+  ) => ValidationResult<ErrorType, ChildrenVResults>;
 }

@@ -4,5 +4,5 @@ export function mapValues<O extends object, R>(object: O, func: (value: O[keyof 
     // @ts-ignore
     result[key] = func(value, key);
     return result;
-  }, {} as Record<keyof O, R>)
+  }, {} as Record<keyof O, R>);
 }

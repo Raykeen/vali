@@ -22,14 +22,14 @@ describe('form validations', () => {
 
   it('nested form validation', () => {
     type FooForm = {
-      index: number,
-      count: number
-    }
+      index: number;
+      count: number;
+    };
 
     type FormType = {
-      foo: FooForm,
-      bar: number[]
-    }
+      foo: FooForm;
+      bar: number[];
+    };
 
     const fooValidator = new Vali<FooForm>().fields(
       {

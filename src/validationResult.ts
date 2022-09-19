@@ -1,6 +1,9 @@
 import { FormFieldsValidationResults, ValidationResult } from './types';
 
-export const createValidationResult = <ChildrenValidationResult extends FormFieldsValidationResults<any, any> | null, ErrorType>(
+export const createValidationResult = <
+  ChildrenValidationResult extends FormFieldsValidationResults<any, any> | null,
+  ErrorType,
+>(
   isValid = true,
   error: ErrorType | null = null,
   result: ChildrenValidationResult,

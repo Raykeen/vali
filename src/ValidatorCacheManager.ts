@@ -4,7 +4,6 @@ interface ValidatorCache<TValue, TContext, TResult> {
   result: TResult;
 }
 
-
 export class ValidatorCacheManager<TValue, TContext, TResult> {
   #cache: ValidatorCache<TValue, TContext, TResult> | null = null;
 
