@@ -4,7 +4,7 @@ import { ValidatorCacheManager } from './ValidatorCacheManager';
 import { FormFieldsValidationResults } from './types';
 
 export class Validator<
-  Value = unknown,
+  Value,
   ContextType = undefined,
   ErrorType extends ErrorTypes = string,
   ChildrenVResults extends FormFieldsValidationResults<any, any> | null = null,

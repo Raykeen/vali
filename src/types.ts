@@ -15,8 +15,6 @@ export type FormValidations<Form, Context, ErrorType extends ErrorTypes = ErrorT
   [K in keyof Form]: ((V: Vali<Form[K], Context, ErrorType, null>) => IValidator<any, Context, ErrorType>);
 }> : object;
 
-type ExtractValue<V> = V extends IValidator<infer Value, any, ErrorTypes, null> ? Value : unknown;
-
 export type FormFieldsValidationResults<Validations extends FormValidations<any, any>, Context> = {
   [K in keyof Validations]: Validations[K] extends (V: any) => IValidator<any, Context, infer E, infer R>
     ? ValidationResult<E, R>
@@ -29,7 +27,7 @@ export type RequireableValue = Nullable<object | string | number | null | undefi
 
 export type CountableValue = Nullable<string | object | null | undefined | Array<unknown>>;
 
-export type NumericValue = Nullable<string | number>;
+export type NumericValue = Nullable<string | number | Date>;
 
 export interface IValidator<
   Value,
